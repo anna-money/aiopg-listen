@@ -139,3 +139,24 @@ async def test_failed_to_connect(pg_server: Dict[str, Any]) -> None:
     await cancel_and_wait(consume_task)
 
     assert handler.notifications == [aiopg_listen.Timeout("simple")]
+
+
+async def test_failing_handler(pg_server: Dict[str, Any]) -> None:
+    async def handle(_: aiopg_listen.NotificationOrTimeout) -> None:
+        raise RuntimeError("Oops")
+
+    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    consume_task = asyncio.create_task(consumer.run({"simple": handle}, notification_timeout=1))
+
+    await asyncio.sleep(0.1)
+
+    async with aiopg.connect(**pg_server["pg_params"]) as connection, connection.cursor() as cursor:
+        await cursor.execute("NOTIFY simple")
+        await cursor.execute("NOTIFY simple")
+        await cursor.execute("NOTIFY simple")
+
+    await asyncio.sleep(0.75)
+
+    assert not consume_task.done()
+
+    await cancel_and_wait(consume_task)

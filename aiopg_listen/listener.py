@@ -110,7 +110,10 @@ class NotificationListener:
 
             # to have independent async context per run
             # to protect from misuse of contextvars
-            await asyncio.create_task(handler(notification), name=f"{__package__}.{channel}")
+            try:
+                await asyncio.create_task(handler(notification), name=f"{__package__}.{channel}")
+            except Exception:
+                logger.exception("Failed to handle %s", notification)
 
     async def _read_notifications(self, queue_per_channel: Dict[str, asyncio.Queue[Notification]]) -> None:
         failed_connect_attempts = 0
