@@ -99,6 +99,8 @@ class NotificationConsumer:
                     if policy == ConsumePolicy.ALL:
                         break
 
+            # to have independent async context per run
+            # to protect from misuse of contextvars
             await asyncio.create_task(handler(notification), name=__package__)
 
     async def _read_notifications(self, queue_per_channel: Dict[str, asyncio.Queue[Notification]]) -> None:
