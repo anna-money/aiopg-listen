@@ -2,12 +2,13 @@ import collections
 import re
 import sys
 
-from .consumer import (  # noqa
+from .listener import (  # noqa
     ConnectFunc,
-    ConsumeNotificationFunc,
-    ConsumePolicy,
+    ListenPolicy,
     Notification,
-    NotificationConsumer,
+    NotificationHandler,
+    NotificationListener,
+    NotificationOrTimeout,
     Timeout,
     connect_func,
 )

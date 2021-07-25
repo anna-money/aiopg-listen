@@ -4,25 +4,23 @@ This library simplifies usage of listen/notify with [aiopg](https://github.com/a
 1. Handles lost of a connection
 1. Simplifies processing notifications from multiple channels
 1. Setups a timeout for receiving a notification
-1. Allows to receive all notifications/only last notification depends on `ConsumePolicy`.
+1. Allows to receive all notifications/only last notification depends on `ListenPolicy`.
 
 ```python
 import asyncio
 import aiopg
 import aiopg_listen
 
-from typing import Union
 
-
-async def process_notifications(notification: Union[aiopg_listen.Notification, aiopg_listen.Timeout]) -> None:
+async def handle_notifications(notification: aiopg_listen.NotificationOrTimeout) -> None:
     print(f"{notification} has been received")
 
 
-consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func())
+consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func())
 consume_task = asyncio.create_task(
-    consumer.consume(
-        {"channel": process_notifications},
-        policy=aiopg_listen.ConsumePolicy.LAST,
+    consumer.run(
+        {"channel": handle_notifications},
+        policy=aiopg_listen.ListenPolicy.LAST,
         notification_timeout=1
     )
 )
