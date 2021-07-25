@@ -2,7 +2,15 @@ import collections
 import re
 import sys
 
-from .consumer import ConsumeNotificationFunc, ConsumePolicy, Notification, NotificationConsumer, Timeout  # noqa
+from .consumer import (  # noqa
+    ConnectFunc,
+    ConsumeNotificationFunc,
+    ConsumePolicy,
+    Notification,
+    NotificationConsumer,
+    Timeout,
+    connect_func,
+)
 
 __version__ = "0.0.1"
 

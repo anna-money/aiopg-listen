@@ -18,7 +18,7 @@ async def process_notifications(notification: Union[aiopg_listen.Notification, a
     print(f"{notification} has been received")
 
 
-consumer = aiopg_listen.NotificationConsumer(aiopg.connect)
+consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func())
 consume_task = asyncio.create_task(
     consumer.consume(
         {"channel": process_notifications},
