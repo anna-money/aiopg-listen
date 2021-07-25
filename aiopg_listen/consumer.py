@@ -2,7 +2,7 @@ import asyncio
 import dataclasses
 import enum
 import logging
-from typing import Awaitable, Callable, Dict, Optional, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
 import aiopg
 import async_timeout
@@ -33,13 +33,21 @@ class Notification:
     payload: Optional[str]
 
 
+ConnectFunc = Callable[[], Awaitable[aiopg.Connection]]
 ConsumeNotificationFunc = Callable[[Union[Notification, Timeout]], Awaitable]
+
+
+def connect_func(*args: Any, **kwargs: Any) -> ConnectFunc:
+    async def _connect() -> aiopg.Connection:
+        return await aiopg.connect(*args, **kwargs)
+
+    return _connect
 
 
 class NotificationConsumer:
     __slots__ = ("_connect", "_reconnect_delay")
 
-    def __init__(self, connect: Callable[[], Awaitable[aiopg.Connection]], reconnect_delay: float = 5) -> None:
+    def __init__(self, connect: ConnectFunc, reconnect_delay: float = 5) -> None:
         self._reconnect_delay = reconnect_delay
         self._connect = connect
 
@@ -101,7 +109,7 @@ class NotificationConsumer:
 
             # to have independent async context per run
             # to protect from misuse of contextvars
-            await asyncio.create_task(handler(notification), name=__package__)
+            await asyncio.create_task(handler(notification), name=f"{__package__}.{channel}")
 
     async def _read_notifications(self, queue_per_channel: Dict[str, asyncio.Queue[Notification]]) -> None:
         failed_connect_attempts = 0

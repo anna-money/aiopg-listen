@@ -24,12 +24,9 @@ async def cancel_and_wait(future: asyncio.Future[None]) -> None:
 
 
 async def test_two_inactive_channels(pg_server: Dict[str, Any]) -> None:
-    async def connect() -> aiopg.Connection:
-        return await aiopg.connect(**pg_server["pg_params"])
-
     processor_1 = Processor()
     processor_2 = Processor()
-    consumer = aiopg_listen.NotificationConsumer(connect)
+    consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func(**pg_server["pg_params"]))
     consume_task = asyncio.create_task(
         consumer.consume({"inactive_1": processor_1.process, "inactive_2": processor_2.process}, notification_timeout=1)
     )
@@ -42,12 +39,9 @@ async def test_two_inactive_channels(pg_server: Dict[str, Any]) -> None:
 
 
 async def test_one_active_channel_and_one_passive_channel(pg_server: Dict[str, Any]) -> None:
-    async def connect() -> aiopg.Connection:
-        return await aiopg.connect(**pg_server["pg_params"])
-
     active_processor = Processor()
     inactive_processor = Processor()
-    consumer = aiopg_listen.NotificationConsumer(connect)
+    consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func(**pg_server["pg_params"]))
     consume_task = asyncio.create_task(
         consumer.consume(
             {"active": active_processor.process, "inactive": inactive_processor.process}, notification_timeout=1
@@ -72,12 +66,9 @@ async def test_one_active_channel_and_one_passive_channel(pg_server: Dict[str, A
 
 
 async def test_two_active_channels(pg_server: Dict[str, Any]) -> None:
-    async def connect() -> aiopg.Connection:
-        return await aiopg.connect(**pg_server["pg_params"])
-
     processor_1 = Processor()
     processor_2 = Processor()
-    consumer = aiopg_listen.NotificationConsumer(connect)
+    consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func(**pg_server["pg_params"]))
     consume_task = asyncio.create_task(
         consumer.consume({"active_1": processor_1.process, "active_2": processor_2.process}, notification_timeout=1)
     )
@@ -103,11 +94,8 @@ async def test_two_active_channels(pg_server: Dict[str, Any]) -> None:
 
 
 async def test_consume_policy_last(pg_server: Dict[str, Any]) -> None:
-    async def connect() -> aiopg.Connection:
-        return await aiopg.connect(**pg_server["pg_params"])
-
     processor = Processor(delay=0.1)
-    consumer = aiopg_listen.NotificationConsumer(connect)
+    consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func(**pg_server["pg_params"]))
     consume_task = asyncio.create_task(
         consumer.consume({"simple": processor.process}, policy=aiopg_listen.ConsumePolicy.LAST, notification_timeout=1)
     )
@@ -127,11 +115,8 @@ async def test_consume_policy_last(pg_server: Dict[str, Any]) -> None:
 
 
 async def test_consume_policy_all(pg_server: Dict[str, Any]) -> None:
-    async def connect() -> aiopg.Connection:
-        return await aiopg.connect(**pg_server["pg_params"])
-
     processor = Processor(delay=0.05)
-    consumer = aiopg_listen.NotificationConsumer(connect)
+    consumer = aiopg_listen.NotificationConsumer(aiopg_listen.connect_func(**pg_server["pg_params"]))
     consume_task = asyncio.create_task(consumer.consume({"simple": processor.process}, notification_timeout=1))
     await asyncio.sleep(0.1)
 
