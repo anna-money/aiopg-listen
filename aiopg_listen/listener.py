@@ -10,7 +10,7 @@ import async_timeout
 logger = logging.getLogger(__package__)
 
 
-class ConsumePolicy(str, enum.Enum):
+class ListenPolicy(str, enum.Enum):
     ALL = "ALL"
     LAST = "LAST"
 
@@ -34,7 +34,8 @@ class Notification:
 
 
 ConnectFunc = Callable[[], Awaitable[aiopg.Connection]]
-ConsumeNotificationFunc = Callable[[Union[Notification, Timeout]], Awaitable]
+NotificationOrTimeout = Union[Notification, Timeout]
+NotificationHandler = Callable[[NotificationOrTimeout], Awaitable]
 
 
 def connect_func(*args: Any, **kwargs: Any) -> ConnectFunc:
@@ -44,21 +45,21 @@ def connect_func(*args: Any, **kwargs: Any) -> ConnectFunc:
     return _connect
 
 
-class NotificationConsumer:
+class NotificationListener:
     __slots__ = ("_connect", "_reconnect_delay")
 
     def __init__(self, connect: ConnectFunc, reconnect_delay: float = 5) -> None:
         self._reconnect_delay = reconnect_delay
         self._connect = connect
 
-    async def consume(
+    async def run(
         self,
-        channels: Dict[str, ConsumeNotificationFunc],
+        handler_per_channel: Dict[str, NotificationHandler],
         *,
-        policy: ConsumePolicy = ConsumePolicy.ALL,
+        policy: ListenPolicy = ListenPolicy.ALL,
         notification_timeout: float = 30,
     ) -> None:
-        queue_per_channel = {channel: asyncio.Queue[Notification]() for channel in channels.keys()}
+        queue_per_channel = {channel: asyncio.Queue[Notification]() for channel in handler_per_channel.keys()}
 
         read_notifications_task = asyncio.create_task(
             self._read_notifications(queue_per_channel=queue_per_channel), name=__package__
@@ -74,7 +75,7 @@ class NotificationConsumer:
                 ),
                 name=f"{__package__}.{channel}",
             )
-            for channel, handler in channels.items()
+            for channel, handler in handler_per_channel.items()
         ]
         try:
             await asyncio.gather(read_notifications_task, *process_notifications_tasks)
@@ -88,12 +89,12 @@ class NotificationConsumer:
         channel: str,
         *,
         notifications: asyncio.Queue[Notification],
-        handler: ConsumeNotificationFunc,
-        policy: ConsumePolicy,
+        handler: NotificationHandler,
+        policy: ListenPolicy,
         notification_timeout: float,
     ) -> None:
         while True:
-            notification: Union[Notification, Timeout]
+            notification: NotificationOrTimeout
 
             if notifications.empty():
                 try:
@@ -104,7 +105,7 @@ class NotificationConsumer:
             else:
                 while not notifications.empty():
                     notification = notifications.get_nowait()
-                    if policy == ConsumePolicy.ALL:
+                    if policy == ListenPolicy.ALL:
                         break
 
             # to have independent async context per run
