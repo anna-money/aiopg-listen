@@ -13,7 +13,7 @@ from .listener import (  # noqa
     connect_func,
 )
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 version = f"{__version__}, Python {sys.version}"
 
