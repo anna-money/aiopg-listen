@@ -16,9 +16,9 @@ async def handle_notifications(notification: aiopg_listen.NotificationOrTimeout)
     print(f"{notification} has been received")
 
 
-consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func())
-consume_task = asyncio.create_task(
-    consumer.run(
+listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func())
+listener_task = asyncio.create_task(
+    listener.run(
         {"channel": handle_notifications},
         policy=aiopg_listen.ListenPolicy.LAST,
         notification_timeout=1
