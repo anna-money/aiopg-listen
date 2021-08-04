@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import dataclasses
 import enum
 import logging
@@ -36,6 +37,8 @@ class Notification:
 ConnectFunc = Callable[[], Awaitable[aiopg.Connection]]
 NotificationOrTimeout = Union[Notification, Timeout]
 NotificationHandler = Callable[[NotificationOrTimeout], Awaitable]
+
+NO_TIMEOUT: float = -1
 
 
 def connect_func(*args: Any, **kwargs: Any) -> ConnectFunc:
@@ -98,7 +101,12 @@ class NotificationListener:
 
             if notifications.empty():
                 try:
-                    with async_timeout.timeout(timeout=notification_timeout):
+                    timeout_ctx = (
+                        contextlib.nullcontext
+                        if notification_timeout == NO_TIMEOUT
+                        else async_timeout.timeout(timeout=notification_timeout)
+                    )
+                    with timeout_ctx:  # type: ignore
                         notification = await notifications.get()
                 except asyncio.TimeoutError:
                     notification = Timeout(channel)
