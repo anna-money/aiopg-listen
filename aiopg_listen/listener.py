@@ -92,7 +92,7 @@ class NotificationListener:
     async def _process_notifications(
         channel: str,
         *,
-        notifications: asyncio.Queue[Notification],
+        notifications: "asyncio.Queue[Notification]",
         handler: NotificationHandler,
         policy: ListenPolicy,
         notification_timeout: float,
@@ -124,7 +124,7 @@ class NotificationListener:
             except Exception:
                 logger.exception("Failed to handle %s", notification)
 
-    async def _read_notifications(self, queue_per_channel: Dict[str, asyncio.Queue[Notification]]) -> None:
+    async def _read_notifications(self, queue_per_channel: Dict[str, "asyncio.Queue[Notification]"]) -> None:
         failed_connect_attempts = 0
         while True:
             try:
