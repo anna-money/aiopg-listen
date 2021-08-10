@@ -3,6 +3,7 @@ import re
 import sys
 
 from .listener import (  # noqa
+    NO_TIMEOUT,
     ConnectFunc,
     ListenPolicy,
     Notification,

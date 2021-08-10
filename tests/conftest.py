@@ -1,9 +1,8 @@
-import asyncio
 import logging
 import socket
+import time
 import uuid
 
-import aiopg
 import docker
 import psycopg2
 import pytest
@@ -31,8 +30,8 @@ def docker_client():
     return docker.APIClient(version="auto")
 
 
-@pytest.fixture
-async def pg_server(unused_port, docker_client, session_id, loop):
+@pytest.fixture(scope="session")
+def pg_server(unused_port, docker_client, session_id):
     docker_client.pull("postgres:11.6")
 
     container_args = dict(
@@ -62,10 +61,11 @@ async def pg_server(unused_port, docker_client, session_id, loop):
         delay = 0.001
         for i in range(100):
             try:
-                async with aiopg.connect(**server_params):
-                    break
+                connection = psycopg2.connect(**server_params)
+                connection.close()
+                break
             except psycopg2.Error:
-                await asyncio.sleep(delay)
+                time.sleep(delay)
                 delay *= 2
         else:
             pytest.fail("Cannot start postgres server")
