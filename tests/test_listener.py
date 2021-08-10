@@ -17,7 +17,7 @@ class Handler:
         self.notifications.append(notification)
 
 
-async def cancel_and_wait(future: asyncio.Future[None]) -> None:
+async def cancel_and_wait(future: "asyncio.Future[None]") -> None:
     future.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await future
