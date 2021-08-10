@@ -3,6 +3,7 @@ import contextlib
 import dataclasses
 import enum
 import logging
+import sys
 from typing import Any, Awaitable, Callable, Dict, Optional, Union
 
 import aiopg
@@ -63,7 +64,7 @@ class NotificationListener:
         policy: ListenPolicy = ListenPolicy.ALL,
         notification_timeout: float = 30,
     ) -> None:
-        queue_per_channel = {channel: asyncio.Queue[Notification]() for channel in handler_per_channel.keys()}
+        queue_per_channel = {channel: _create_notifications_queue() for channel in handler_per_channel.keys()}
 
         read_notifications_task = asyncio.create_task(
             self._read_notifications(queue_per_channel=queue_per_channel), name=__package__
@@ -92,7 +93,7 @@ class NotificationListener:
     async def _process_notifications(
         channel: str,
         *,
-        notifications: asyncio.Queue[Notification],
+        notifications: "asyncio.Queue[Notification]",
         handler: NotificationHandler,
         policy: ListenPolicy,
         notification_timeout: float,
@@ -124,7 +125,7 @@ class NotificationListener:
             except Exception:
                 logger.exception("Failed to handle %s", notification)
 
-    async def _read_notifications(self, queue_per_channel: Dict[str, asyncio.Queue[Notification]]) -> None:
+    async def _read_notifications(self, queue_per_channel: Dict[str, "asyncio.Queue[Notification]"]) -> None:
         failed_connect_attempts = 0
         while True:
             try:
@@ -150,3 +151,9 @@ class NotificationListener:
 
                 await asyncio.sleep(self._reconnect_delay * failed_connect_attempts)
                 failed_connect_attempts += 1
+
+
+def _create_notifications_queue() -> "asyncio.Queue[Notification]":
+    if sys.version_info >= (3, 9, 0):
+        return asyncio.Queue[Notification]()
+    return asyncio.Queue()
