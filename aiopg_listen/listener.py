@@ -153,7 +153,7 @@ class NotificationListener:
                 failed_connect_attempts += 1
 
 
-def _create_notifications_queue() -> asyncio.Queue[Notification]:
+def _create_notifications_queue() -> "asyncio.Queue[Notification]":
     if sys.version_info >= (3, 9, 0):
         return asyncio.Queue[Notification]()
     return asyncio.Queue()
