@@ -7,7 +7,7 @@ import aiopg
 import aiopg_listen
 
 
-class TestHandler:
+class Handler:
     def __init__(self, delay: float = 0) -> None:
         self.delay = delay
         self.notifications: List[aiopg_listen.NotificationOrTimeout] = []
@@ -24,26 +24,26 @@ async def cancel_and_wait(future: asyncio.Future[None]) -> None:
 
 
 async def test_two_inactive_channels(pg_server: Dict[str, Any]) -> None:
-    handler_1 = TestHandler()
-    handler_2 = TestHandler()
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(
-        consumer.run({"inactive_1": handler_1.handle, "inactive_2": handler_2.handle}, notification_timeout=1)
+    handler_1 = Handler()
+    handler_2 = Handler()
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(
+        listener.run({"inactive_1": handler_1.handle, "inactive_2": handler_2.handle}, notification_timeout=1)
     )
 
     await asyncio.sleep(1.5)
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert handler_1.notifications == [aiopg_listen.Timeout("inactive_1")]
     assert handler_2.notifications == [aiopg_listen.Timeout("inactive_2")]
 
 
 async def test_one_active_channel_and_one_passive_channel(pg_server: Dict[str, Any]) -> None:
-    active_handler = TestHandler()
-    inactive_handler = TestHandler()
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(
-        consumer.run({"active": active_handler.handle, "inactive": inactive_handler.handle}, notification_timeout=1)
+    active_handler = Handler()
+    inactive_handler = Handler()
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(
+        listener.run({"active": active_handler.handle, "inactive": inactive_handler.handle}, notification_timeout=1)
     )
 
     async with aiopg.connect(**pg_server["pg_params"]) as connection, connection.cursor() as cursor:
@@ -52,7 +52,7 @@ async def test_one_active_channel_and_one_passive_channel(pg_server: Dict[str, A
         await cursor.execute("NOTIFY active, '2'")
         await asyncio.sleep(0.75)
 
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert active_handler.notifications == [
         aiopg_listen.Notification("active", "1"),
@@ -64,11 +64,11 @@ async def test_one_active_channel_and_one_passive_channel(pg_server: Dict[str, A
 
 
 async def test_two_active_channels(pg_server: Dict[str, Any]) -> None:
-    handler_1 = TestHandler()
-    handler_2 = TestHandler()
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(
-        consumer.run({"active_1": handler_1.handle, "active_2": handler_2.handle}, notification_timeout=1)
+    handler_1 = Handler()
+    handler_2 = Handler()
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(
+        listener.run({"active_1": handler_1.handle, "active_2": handler_2.handle}, notification_timeout=1)
     )
     await asyncio.sleep(0.1)
 
@@ -79,7 +79,7 @@ async def test_two_active_channels(pg_server: Dict[str, Any]) -> None:
         await cursor.execute("NOTIFY active_1, '4'")
         await asyncio.sleep(0.75)
 
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert handler_1.notifications == [
         aiopg_listen.Notification("active_1", "1"),
@@ -92,10 +92,10 @@ async def test_two_active_channels(pg_server: Dict[str, Any]) -> None:
 
 
 async def test_listen_policy_last(pg_server: Dict[str, Any]) -> None:
-    handler = TestHandler(delay=0.1)
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(
-        consumer.run({"simple": handler.handle}, policy=aiopg_listen.ListenPolicy.LAST, notification_timeout=1)
+    handler = Handler(delay=0.1)
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(
+        listener.run({"simple": handler.handle}, policy=aiopg_listen.ListenPolicy.LAST, notification_timeout=1)
     )
     await asyncio.sleep(0.1)
 
@@ -104,7 +104,7 @@ async def test_listen_policy_last(pg_server: Dict[str, Any]) -> None:
             await cursor.execute(f"NOTIFY simple, '{i}'")
         await asyncio.sleep(0.75)
 
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert handler.notifications == [
         aiopg_listen.Notification("simple", "0"),
@@ -113,9 +113,9 @@ async def test_listen_policy_last(pg_server: Dict[str, Any]) -> None:
 
 
 async def test_listen_policy_all(pg_server: Dict[str, Any]) -> None:
-    handler = TestHandler(delay=0.05)
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(consumer.run({"simple": handler.handle}, notification_timeout=1))
+    handler = Handler(delay=0.05)
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(listener.run({"simple": handler.handle}, notification_timeout=1))
     await asyncio.sleep(0.1)
 
     async with aiopg.connect(**pg_server["pg_params"]) as connection, connection.cursor() as cursor:
@@ -123,30 +123,45 @@ async def test_listen_policy_all(pg_server: Dict[str, Any]) -> None:
             await cursor.execute(f"NOTIFY simple, '{i}'")
         await asyncio.sleep(0.75)
 
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert handler.notifications == [aiopg_listen.Notification("simple", str(i)) for i in range(10)]
 
 
-async def test_failed_to_connect(pg_server: Dict[str, Any]) -> None:
+async def test_failed_to_connect() -> None:
     async def connect() -> aiopg.Connection:
         raise RuntimeError("Failed to connect")
 
-    handler = TestHandler()
-    consumer = aiopg_listen.NotificationListener(connect)
-    consume_task = asyncio.create_task(consumer.run({"simple": handler.handle}, notification_timeout=1))
+    handler = Handler()
+    listener = aiopg_listen.NotificationListener(connect)
+    listener_task = asyncio.create_task(listener.run({"simple": handler.handle}, notification_timeout=1))
     await asyncio.sleep(1.5)
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)
 
     assert handler.notifications == [aiopg_listen.Timeout("simple")]
+
+
+async def test_failed_to_connect_no_timeout() -> None:
+    async def connect() -> aiopg.Connection:
+        raise RuntimeError("Failed to connect")
+
+    handler = Handler()
+    listener = aiopg_listen.NotificationListener(connect)
+    listen_task = asyncio.create_task(
+        listener.run({"simple": handler.handle}, notification_timeout=aiopg_listen.NO_TIMEOUT)
+    )
+    await asyncio.sleep(1.5)
+    await cancel_and_wait(listen_task)
+
+    assert handler.notifications == []
 
 
 async def test_failing_handler(pg_server: Dict[str, Any]) -> None:
     async def handle(_: aiopg_listen.NotificationOrTimeout) -> None:
         raise RuntimeError("Oops")
 
-    consumer = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
-    consume_task = asyncio.create_task(consumer.run({"simple": handle}, notification_timeout=1))
+    listener = aiopg_listen.NotificationListener(aiopg_listen.connect_func(**pg_server["pg_params"]))
+    listener_task = asyncio.create_task(listener.run({"simple": handle}, notification_timeout=1))
 
     await asyncio.sleep(0.1)
 
@@ -157,6 +172,6 @@ async def test_failing_handler(pg_server: Dict[str, Any]) -> None:
 
     await asyncio.sleep(0.75)
 
-    assert not consume_task.done()
+    assert not listener_task.done()
 
-    await cancel_and_wait(consume_task)
+    await cancel_and_wait(listener_task)

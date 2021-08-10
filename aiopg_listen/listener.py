@@ -39,6 +39,7 @@ NotificationOrTimeout = Union[Notification, Timeout]
 NotificationHandler = Callable[[NotificationOrTimeout], Awaitable]
 
 NO_TIMEOUT: float = -1
+NO_TIMEOUT_CTX = contextlib.nullcontext()
 
 
 def connect_func(*args: Any, **kwargs: Any) -> ConnectFunc:
@@ -102,7 +103,7 @@ class NotificationListener:
             if notifications.empty():
                 try:
                     timeout_ctx = (
-                        contextlib.nullcontext
+                        NO_TIMEOUT_CTX
                         if notification_timeout == NO_TIMEOUT
                         else async_timeout.timeout(timeout=notification_timeout)
                     )
