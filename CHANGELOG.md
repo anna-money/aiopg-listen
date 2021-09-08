@@ -1,3 +1,7 @@
+## v0.0.4 (2021-09-08)
+
+* Reexport explicitly [#18](https://github.com/Pliner/aiopg-listen/pull/18)
+
 ## v0.0.3 (2021-08-10)
 
 * Allow suppressing timeout by aiopg_listen.NO_TIMEOUT [#9](https://github.com/Pliner/aiopg-listen/pull/9)
