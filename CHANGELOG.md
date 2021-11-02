@@ -1,3 +1,7 @@
+## v0.0.5 (2021-11-02)
+
+* [Support async-timeout 4.0+](https://github.com/Pliner/aiopg-listen/pull/32)
+
 ## v0.0.4 (2021-09-08)
 
 * Reexport explicitly [#18](https://github.com/Pliner/aiopg-listen/pull/18)
