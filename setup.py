@@ -3,7 +3,7 @@ from pathlib import Path
 
 from setuptools import setup
 
-install_requires = ["aiopg>=1.3.1", "async_timeout>=3.0,<4.0"]
+install_requires = ["aiopg>=1.3.1", "async_timeout>=3.0,<5.0"]
 
 
 def read(*parts):
