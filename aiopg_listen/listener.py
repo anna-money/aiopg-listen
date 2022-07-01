@@ -4,7 +4,7 @@ import dataclasses
 import enum
 import logging
 import sys
-from typing import Any, Awaitable, Callable, Dict, Optional, Union
+from typing import Any, Callable, Coroutine, Dict, Optional, Union
 
 import aiopg
 import async_timeout
@@ -35,9 +35,9 @@ class Notification:
     payload: Optional[str]
 
 
-ConnectFunc = Callable[[], Awaitable[aiopg.Connection]]
+ConnectFunc = Callable[[], Coroutine[Any, Any, aiopg.Connection]]
 NotificationOrTimeout = Union[Notification, Timeout]
-NotificationHandler = Callable[[NotificationOrTimeout], Awaitable]
+NotificationHandler = Callable[[NotificationOrTimeout], Coroutine]
 
 NO_TIMEOUT: float = -1
 NO_TIMEOUT_CTX = contextlib.nullcontext()
