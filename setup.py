@@ -3,7 +3,10 @@ from pathlib import Path
 
 from setuptools import setup
 
-install_requires = ["aiopg>=1.3.3", "async_timeout>=3.0,<5.0"]
+install_requires = [
+    "aiopg>=1.4.0",
+    "async_timeout>=3.0,<5.0; python_version<'3.11'",
+]
 
 
 def read(*parts):
@@ -55,6 +58,8 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
         "Environment :: Web Environment",
         "Development Status :: 5 - Production/Stable",

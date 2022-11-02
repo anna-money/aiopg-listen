@@ -7,7 +7,12 @@ import sys
 from typing import Any, Callable, Coroutine, Dict, Optional, Union
 
 import aiopg
-import async_timeout
+
+if sys.version_info < (3, 11, 0):
+    from async_timeout import timeout
+else:
+    from asyncio import timeout  # type: ignore
+
 
 logger = logging.getLogger(__package__)
 
