@@ -21,7 +21,7 @@ test:
 	@python3 -m pytest -vv --rootdir tests .
 
 pyenv:
-	echo aiopg-listen > .python-version && pyenv install -s 3.10.5 && pyenv virtualenv -f 3.10.5 aiopg-listen
+	echo aiopg-listen > .python-version && pyenv install -s 3.11.0rc2 && pyenv virtualenv -f 3.11.0rc2 aiopg-listen
 
 pyenv-delete:
 	pyenv virtualenv-delete -f aiopg-listen

@@ -7,7 +7,12 @@ import sys
 from typing import Any, Callable, Coroutine, Dict, Optional, Union
 
 import aiopg
-import async_timeout
+
+if sys.version_info < (3, 11, 0):
+    from async_timeout import timeout
+else:
+    from asyncio import timeout  # type: ignore
+
 
 logger = logging.getLogger(__package__)
 
@@ -106,7 +111,7 @@ class NotificationListener:
                     timeout_ctx = (
                         NO_TIMEOUT_CTX
                         if notification_timeout == NO_TIMEOUT
-                        else async_timeout.timeout(notification_timeout)
+                        else timeout(notification_timeout)
                     )
                     with timeout_ctx:  # type: ignore
                         notification = await notifications.get()
