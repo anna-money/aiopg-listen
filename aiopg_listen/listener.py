@@ -111,7 +111,7 @@ class NotificationListener:
                     timeout_ctx = (
                         NO_TIMEOUT_CTX
                         if notification_timeout == NO_TIMEOUT
-                        else async_timeout.timeout(notification_timeout)
+                        else timeout(notification_timeout)
                     )
                     with timeout_ctx:  # type: ignore
                         notification = await notifications.get()
