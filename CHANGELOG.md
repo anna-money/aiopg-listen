@@ -1,3 +1,7 @@
+## v0.0.6 (2022-11-02)
+
+* [Add python 3.11 support](https://github.com/Pliner/aiopg-listen/pull/144)
+
 ## v0.0.5 (2021-11-02)
 
 * [Support async-timeout 4.0+](https://github.com/Pliner/aiopg-listen/pull/32)
