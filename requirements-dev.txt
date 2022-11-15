@@ -2,7 +2,7 @@ pytest==7.2.0
 pytest-runner==6.0.0
 isort==5.10.1
 flake8==5.0.4
-mypy==0.982
+mypy==0.991
 black==22.10.0
 aiopg==1.4.0
 async_timeout==4.0.2; python_version<"3.11"
