@@ -1,3 +1,7 @@
+## v0.0.7 (2023-03-09)
+
+* [Fix python 3.11 compatibility](https://github.com/Pliner/aiopg-listen/pull/183)
+
 ## v0.0.6 (2022-11-02)
 
 * [Add python 3.11 support](https://github.com/Pliner/aiopg-listen/pull/144)
