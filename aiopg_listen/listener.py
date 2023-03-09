@@ -107,16 +107,14 @@ class NotificationListener:
             notification: NotificationOrTimeout
 
             if notifications.empty():
-                try:
-                    timeout_ctx = (
-                        NO_TIMEOUT_CTX
-                        if notification_timeout == NO_TIMEOUT
-                        else timeout(notification_timeout)
-                    )
-                    with timeout_ctx:  # type: ignore
-                        notification = await notifications.get()
-                except asyncio.TimeoutError:
-                    notification = Timeout(channel)
+                if notification_timeout == NO_TIMEOUT:
+                    notification = await notifications.get()
+                else:
+                    try:
+                        async with timeout(notification_timeout):
+                            notification = await notifications.get()
+                    except asyncio.TimeoutError:
+                        notification = Timeout(channel)
             else:
                 while not notifications.empty():
                     notification = notifications.get_nowait()
