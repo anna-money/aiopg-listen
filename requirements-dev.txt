@@ -8,7 +8,7 @@ black==23.3.0
 aiopg==1.4.0
 async_timeout==4.0.2; python_version<"3.11"
 setuptools==67.7.2
-wheel==0.40.0
+wheel==0.41.0
 twine==4.0.2
 pytest-aiohttp==1.0.4
 docker==6.0.1
